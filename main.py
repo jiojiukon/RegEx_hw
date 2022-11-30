@@ -61,7 +61,7 @@ if __name__ == '__main__':
         pretty_text = phone_structure(del_dupl)
 
     with open("phonebook.csv", "w", encoding='utf-8') as f:
-        datawriter = csv.writer(f, delimiter=',')
+        datawriter = csv.writer(f, delimiter=',', lineterminator='\r')
         datawriter.writerows(pretty_text)
 
 
