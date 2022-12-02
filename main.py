@@ -1,9 +1,11 @@
 import csv
 import re
+import pandas as pd
 
 sub_num_pattern = r'[\D]+((доб[.])\W+(\d{4}))[)\W]+'
 phone_number_pattern = r'([+]7|[8])((\W?){2}(\d{3}))((\W?){2}(\d{3}))((\W?){2}(\d{2}))((\W?){2}(\d{2}))'
 name_pattern = r'^((\w+)(\s+|[,]))(((\w+))(\s+|[,]))'
+full_name_pattern = name_pattern + r''
 
 
 def del_empty_el_from_list(txt):
@@ -50,6 +52,28 @@ def phone_structure(my_text):
         pretty_phone.append(pretty_sub_number.split(','))
     return pretty_phone
 
+def final(my_list):
+    all_columns = []
+    for i in my_list[1:]:
+        col = {a: None for a in my_list[0]}
+        for el in i:
+            if re.match(phone_number_pattern, el):
+                col['phone'] = el
+            elif re.findall(r'@', el):
+                col['email'] = el
+            elif re.match(r'ФНС|Минфин', el):
+                col['organization'] = el
+            elif not col['lastname']:
+                col['lastname'] = i[0]
+                col['firstname'] = i[1]
+                col['surname'] = i[2]
+            elif len(el) > 20:
+                col['position'] = el
+        all_columns.append(list(col.values()))
+    all_columns.insert(0, my_list[0])
+    return all_columns
+
+
 
 if __name__ == '__main__':
     with open("phonebook_raw.csv", encoding='utf-8') as f:
@@ -59,9 +83,12 @@ if __name__ == '__main__':
         name_fix = name_structure(spaces_fix)
         del_dupl = delete_dupl(name_fix)
         pretty_text = phone_structure(del_dupl)
+        final_fix = final(pretty_text)
+
+        print(pd.DataFrame(final_fix))
 
     with open("phonebook.csv", "w", encoding='utf-8') as f:
         datawriter = csv.writer(f, delimiter=',', lineterminator='\r')
-        datawriter.writerows(pretty_text)
+        datawriter.writerows(final_fix)
 
 
